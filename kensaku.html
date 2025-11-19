@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>認証付きHTMLビューア</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<script>
+function getLoginCache(){
+  const raw = localStorage.getItem("harutyan-login");
+  if(!raw) return null;
+  try{
+    const data = JSON.parse(raw);
+    if(Date.now() > data.expiresAt){
+      localStorage.removeItem("harutyan-login");
+      return null;
+    }
+    return data.email;
+  }catch{return null;}
+}
+function b64ToText(b64){
+  return decodeURIComponent(escape(atob(b64)));
+}
+const EMBED_B64 = "PCFkb2N0eXBlIGh0bWw+CjxodG1sIGxhbmc9ImphIj4KPGhlYWQ+CiAgPG1ldGEgY2hhcnNldD0idXRmLTgiIC8+CiAgPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xIiAvPgogIDx0aXRsZT5CaW5nIOaknOe0ouOCkuWfi+OCgei+vOOBvzwvdGl0bGU+CiAgPHN0eWxlPgogICAgaHRtbCwgYm9keSB7IGhlaWdodDogMTAwJTsgbWFyZ2luOiAwOyB9CiAgICAuZnJhbWUtd3JhcCB7IHBvc2l0aW9uOiBmaXhlZDsgaW5zZXQ6IDA7IH0KICAgIGlmcmFtZSB7CiAgICAgIHdpZHRoOiAxMDAlOwogICAgICBoZWlnaHQ6IDEwMCU7CiAgICAgIGJvcmRlcjogMDsKICAgIH0KICA8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5PgogIDxkaXYgY2xhc3M9ImZyYW1lLXdyYXAiPgogICAgPGlmcmFtZQogICAgICBzcmM9Imh0dHBzOi8vd3d3LmJpbmcuY29tL3NlYXJjaD9xPSVFMyU4MSU5MyVFMyU4MSU5MyVFMyU4MSVBQiVFNSU4NSVBNSVFNSU4QSU5QiVFMyU4MSU5NyVFMyU4MSVBNiVFNiVBNCU5QyVFNyVCNCVBMiZmb3JtPVFCTEgmc3A9LTEmZ2hjPTEmbHE9MCZwcT0lRTMlODElOTMlRTMlODElOTMlRTMlODElQUIlRTUlODUlQTUlRTUlOEElOUIlRTMlODElOTclRTMlODElQTYlRTYlQTQlOUMlRTclQjQlQTImc2M9MTItOSZxcz1uJnNrPSZjdmlkPUQwODk4NTJCMjVEQjRBNjA5RjkwQjVGODVBNjgzRjMyIgogICAgICByZWZlcnJlcnBvbGljeT0ibm8tcmVmZXJyZXIiCiAgICAgIHNhbmRib3g9ImFsbG93LWZvcm1zIGFsbG93LXBvaW50ZXItbG9jayBhbGxvdy1zY3JpcHRzIGFsbG93LXNhbWUtb3JpZ2luIGFsbG93LXBvcHVwcyIKICAgID48L2lmcmFtZT4KICA8L2Rpdj4KPC9ib2R5Pgo8L2h0bWw+Cg==";
+(function init(){
+  const cached = getLoginCache();
+  if(cached){
+    // ログイン済みなら埋め込みHTMLを復号して表示
+    const html = b64ToText(EMBED_B64);
+    document.open();
+    document.write(html);
+    document.close();
+  }else{
+    // 未ログインなら login.html にリダイレクト
+    location.href = "login.html";
+  }
+})();
+</script>
+</body>
+</html>

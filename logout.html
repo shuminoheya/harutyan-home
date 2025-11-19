@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ログアウト</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: system-ui, sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+.box { background:#fff; padding:20px; border-radius:12px; width:360px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:center; }
+button { padding:.8rem 1.2rem; border:none; border-radius:8px; font-weight:700; font-size:1rem; cursor:pointer; background:#ef4444; color:#fff; }
+button:hover { background:#dc2626; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>ログアウト</h2>
+  <p id="currentUser">現在ログインしているユーザー: 未ログイン</p>
+  <p id="status">ログアウトボタンを押してください</p>
+  <button id="logoutBtn">ログアウト</button>
+</div>
+
+<script>
+// 現在ログインしているユーザーを表示
+function getLoginCache(){
+  const raw = localStorage.getItem("harutyan-login");
+  if(!raw) return null;
+  try{
+    const data = JSON.parse(raw);
+    if(Date.now() > data.expiresAt){
+      localStorage.removeItem("harutyan-login");
+      return null;
+    }
+    return data.email;
+  }catch{return null;}
+}
+
+const current = getLoginCache();
+if(current){
+  document.getElementById("currentUser").textContent = "現在ログインしているユーザー: " + current;
+}
+
+// ログアウト処理
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("harutyan-login");
+  document.getElementById("status").textContent = "ログアウトしました。ログインページへ移動します...";
+  setTimeout(() => {
+    location.href = "index.html";
+  }, 2000);
+});
+</script>
+</body>
+</html>
