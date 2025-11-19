@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ログインフォーム</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: system-ui, sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+.box { background:#fff; padding:20px; border-radius:12px; width:340px; box-shadow:0 6px 24px rgba(0,0,0,0.1); }
+.box h2 { text-align:center; margin-bottom:1rem; }
+.box input, .box button { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
+.box button { background:#2563eb; color:#fff; border:none; cursor:pointer; font-weight:700; }
+.box button:hover { background:#1d4ed8; }
+.msg { text-align:center; margin-top:8px; min-height:22px; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="box">
+<h2>ログイン</h2>
+<form id="loginForm" novalidate autocomplete="off">
+<input type="email" id="email" placeholder="メールアドレス" required>
+<input type="password" id="password" placeholder="パスワード" required>
+<button id="loginBtn" type="button">ログイン</button>
+</form>
+<div class="msg" id="message"></div>
+</div>
+<script>
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+const VERIFICATION_SECRET = "LOGIN-OK";
+function b64ToBytes(b64){const bin=atob(b64);const out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out;}
+async function deriveKey(email,password,saltBytes){
+  const material=await crypto.subtle.importKey("raw",enc.encode(email+":"+password),{name:"PBKDF2"},false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:saltBytes,iterations:120000,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+const encryptedUsers=[
+  {
+    "email": "naoto",
+    "salt_b64": "NvAMizEBSqLjBtrtO64A3Q==",
+    "iv_b64": "krloYDyv/Hse2Ytw",
+    "ct_b64": "FAeu7XqunUjQDhrvhtV3QOVl9QGMtvEk"
+  },
+  {
+    "email": "wan",
+    "salt_b64": "dG5qM4hDEJCq49w93Xa4Bw==",
+    "iv_b64": "gtZ7iH/HML5loeEi",
+    "ct_b64": "EwzRWHo0rIOcV4NP46P7o29NAP18e6TV"
+  },
+  {
+    "email": "kusunoki",
+    "salt_b64": "+BcyfeduOMyP33aPhLodtw==",
+    "iv_b64": "iNqmSAvoR1pi8ZPq",
+    "ct_b64": "bjE2LuaQWHRCtxipwgqq0W3KafBg6Hct"
+  }
+];
+function setLoginCache(email,ttlHours=3){
+  const expiresAt=Date.now()+ttlHours*60*60*1000;
+  localStorage.setItem("harutyan-login",JSON.stringify({email,expiresAt}));
+}
+function getLoginCache(){
+  const raw=localStorage.getItem("harutyan-login");
+  if(!raw)return null;
+  try{const data=JSON.parse(raw);if(Date.now()>data.expiresAt){localStorage.removeItem("harutyan-login");return null;}return data.email;}catch{return null;}
+}
+function showMessage(text,color="#222"){const msg=document.getElementById("message");msg.style.color=color;msg.textContent=text;}
+async function tryLogin(emailInput,passwordInput){
+  const record=encryptedUsers.find(u=>u.email===emailInput);
+  if(!record){showMessage("該当メールが登録されていません","red");return false;}
+  const salt=b64ToBytes(record.salt_b64);const iv=b64ToBytes(record.iv_b64);const ct=b64ToBytes(record.ct_b64);
+  try {
+    const key = await deriveKey(emailInput, passwordInput, salt);
+    const ptBytes = new Uint8Array(
+      await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct)
+    );
+    const text = dec.decode(ptBytes);
+    return text === VERIFICATION_SECRET;
+  } catch {
+    return false;
+  }
+}
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  if (!email || !password) {
+    showMessage("メールとパスワードを入力してください", "red");
+    return;
+  }
+  showMessage("認証中…", "#666");
+  try {
+    const ok = await tryLogin(email, password);
+    if (ok) {
+      setLoginCache(email, 3); // 3時間有効
+      showMessage("ログイン成功: " + email, "green");
+    } else {
+      showMessage("メールアドレスまたはパスワードが違います", "red");
+    }
+  } catch (e) {
+    console.error(e);
+    showMessage("認証処理でエラーが発生しました", "red");
+  }
+});
+</script>
+</body>
+</html>
