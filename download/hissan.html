@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>掛け算＆割り算ひっ算</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .controls {
+      margin-bottom: 10px;
+    }
+    input, select, button {
+      font-size: 1rem;
+      padding: 5px;
+      margin-right: 8px;
+    }
+    .output {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      font-family: monospace;
+      white-space: pre;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>掛け算＆割り算ひっ算</h1>
+
+  <div class="controls">
+    <label>
+      モード：
+      <select id="mode">
+        <option value="mul">掛け算</option>
+        <option value="div">割り算</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="controls">
+    <label>かけられる数／被除数：
+      <input id="a" type="text" placeholder="例: 1234" />
+    </label>
+    <label>かける数／除数：
+      <input id="b" type="text" placeholder="例: 12" />
+    </label>
+  </div>
+
+  <div class="controls hidden" id="divOptions">
+    <label><input type="radio" name="divMode" value="decimal" checked /> 小数点第4位まで</label>
+    <label><input type="radio" name="divMode" value="exact" /> 割り切れる場合のみ</label>
+  </div>
+
+  <button id="calcBtn">計算</button>
+
+  <div id="result" class="output"></div>
+
+  <script>
+    const modeSelector = document.getElementById('mode');
+    const divOptions = document.getElementById('divOptions');
+    modeSelector.addEventListener('change', () => {
+      divOptions.classList.toggle('hidden', modeSelector.value !== 'div');
+      document.getElementById('result').textContent = '';
+    });
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+
+    function calculate() {
+      const aStr = document.getElementById('a').value.trim();
+      const bStr = document.getElementById('b').value.trim();
+      if (!/^\d+$/.test(aStr) || !/^\d+$/.test(bStr)) {
+        return showError('整数のみ入力してください');
+      }
+      const a = parseInt(aStr, 10);
+      const b = parseInt(bStr, 10);
+
+      if (modeSelector.value === 'mul') {
+        renderMultiplication(aStr, bStr, a, b);
+      } else {
+        const divMode = document.querySelector('input[name="divMode"]:checked').value;
+        renderDivisionVertical(a, b, divMode);
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('result').textContent = `エラー: ${msg}`;
+    }
+
+    // --------------------
+    // 掛け算縦式
+    // --------------------
+    function renderMultiplication(aStr, bStr, a, b) {
+      const digits = bStr.split('').reverse();
+      const partials = digits.map(d => (a * parseInt(d, 10)).toString());
+      const total = (a * b).toString();
+
+      const width = Math.max(
+        aStr.length,
+        bStr.length + 1,
+        ...partials.map((p, i) => p.length + i),
+        total.length
+      );
+      const pad = s => ' '.repeat(width - s.length) + s;
+      const formatPartial = (s, shift) =>
+        ' '.repeat(width - s.length - shift) + s + ' '.repeat(shift);
+
+      let lines = [];
+      lines.push(pad(aStr));
+      lines.push(pad('×' + bStr));
+      lines.push('-'.repeat(width));
+      partials.forEach((p, i) => lines.push(formatPartial(p, i)));
+      if (partials.length > 1) lines.push('-'.repeat(width));
+      lines.push(pad(total));
+
+      document.getElementById('result').textContent = lines.join('\n');
+    }
+
+    // --------------------
+    // 割り算縦式（筆算スタイル）
+    // --------------------
+    function renderDivisionVertical(dividend, divisor, mode) {
+      if (mode === 'exact' && dividend % divisor !== 0) {
+        return showError('割り切れません');
+      }
+
+      const digs = dividend.toString().split('').map(Number);
+      let rem = 0;
+      let quotient = '';
+      let steps = [];  // {index, bring, sub}
+
+      // 整数部の桁
+      digs.forEach((digit, i) => {
+        rem = rem * 10 + digit;
+        const qd = Math.floor(rem / divisor);
+        const sub = qd * divisor;
+        if (qd > 0 || quotient.length > 0) {
+          steps.push({
+            index: i,
+            bring: rem,
+            sub: sub
+          });
+          quotient += qd;
+          rem -= sub;
+        } else if (i === digs.length - 1) {
+          // 商がゼロしか出ない場合
+          quotient = '0';
+        }
+      });
+
+      // 小数部（最大4桁）
+      if (mode === 'decimal') {
+        quotient += '.';
+        for (let i = 1; i <= 4; i++) {
+          rem *= 10;
+          const qd = Math.floor(rem / divisor);
+          const sub = qd * divisor;
+          steps.push({
+            index: digs.length + i - 1,
+            bring: rem,
+            sub: sub
+          });
+          quotient += qd;
+          rem -= sub;
+        }
+      }
+
+      // —— ASCII 描画 ——
+      const dStr = dividend.toString();
+      const qStr = quotient;
+      const left = divisor.toString();
+      const topWidth = left.length + 1 + dStr.length;
+      // 商を上にのせる位置
+      const qOffset = left.length + 1;
+      let lines = [];
+
+      // 1) 商行
+      lines.push(' '.repeat(qOffset) + qStr);
+
+      // 2) 割る数｜割られる数
+      lines.push(left + '|' + dStr);
+      lines.push(' '.repeat(left.length) + '|' + '-'.repeat(dStr.length));
+
+      // 3) 各ステップの引き算
+      steps.forEach((st, i) => {
+        const bringStr = st.bring.toString();
+        const subStr   = st.sub.toString();
+        // 取り下げる位置＝商桁に合わせる
+        const pos = left.length + 1 + st.index - bringStr.length + 1;
+        // 持ち上げ数字
+        lines.push(' '.repeat(pos) + '_' + bringStr);
+        // 引く数
+        lines.push(' '.repeat(pos + 1 + (bringStr.length - subStr.length)) + subStr);
+        // ──
+        lines.push(' '.repeat(pos + 1) + '-'.repeat(Math.max(bringStr.length, subStr.length)));
+      });
+
+      document.getElementById('result').textContent = lines.join('\n');
+    }
+  </script>
+</body>
+</html>
