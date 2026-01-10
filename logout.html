@@ -7,8 +7,35 @@
 <style>
 body { font-family: system-ui, sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
 .box { background:#fff; padding:20px; border-radius:12px; width:360px; box-shadow:0 6px 24px rgba(0,0,0,0.1); text-align:center; }
-button { padding:.8rem 1.2rem; border:none; border-radius:8px; font-weight:700; font-size:1rem; cursor:pointer; background:#ef4444; color:#fff; }
-button:hover { background:#dc2626; }
+button { padding:.8rem 1.2rem; border:none; border-radius:8px; font-weight:700; font-size:1rem; cursor:pointer; }
+.logout-btn { background:#ef4444; color:#fff; }
+.logout-btn:hover { background:#dc2626; }
+
+#optionLink {
+  display:block;
+  margin-top:12px;
+  color:#2563eb;
+  cursor:pointer;
+  text-decoration:underline;
+  font-weight:600;
+}
+
+#optionBox { 
+  margin-top:15px; 
+  padding:15px; 
+  background:#f9fafb; 
+  border-radius:8px; 
+  display:none; 
+  box-shadow:0 0 10px rgba(0,0,0,0.05);
+}
+input[type="number"]{
+  width:100%; padding:8px; margin-top:8px;
+  border:1px solid #ccc; border-radius:6px;
+}
+.run-btn{
+  margin-top:10px; background:#10b981; color:#fff;
+}
+.run-btn:hover{ background:#059669; }
 </style>
 </head>
 <body>
@@ -16,7 +43,20 @@ button:hover { background:#dc2626; }
   <h2>ログアウト</h2>
   <p id="currentUser">現在ログインしているユーザー: 未ログイン</p>
   <p id="status">ログアウトボタンを押してください</p>
-  <button id="logoutBtn">ログアウト</button>
+  <button id="logoutBtn" class="logout-btn">ログアウト</button>
+
+  <!-- ▼ 青いリンク -->
+  <span id="optionLink">オプション ▽</span>
+
+  <!-- ▼ オプション内容 -->
+  <div id="optionBox">
+    <h3 style="margin:0;">自動ログアウト設定</h3>
+    <p>指定した秒数後に自動でログアウトします。</p>
+    <p>これは隙を見てチクったりするやつ用の対策です</p>
+      <p>64bitが扱える最大数をいれてバグらせる人いい加減にしてください（9,223,372,036,854,775,807）</p>
+    <input type="number" id="autoSec" placeholder="秒数を入力（例：60）">
+    <button id="autoRun" class="run-btn">実行</button>
+  </div>
 </div>
 
 <script>
@@ -40,12 +80,42 @@ if(current){
 }
 
 // ログアウト処理
-document.getElementById("logoutBtn").addEventListener("click", () => {
+function logout(){
   localStorage.removeItem("harutyan-login");
   document.getElementById("status").textContent = "ログアウトしました。ログインページへ移動します...";
   setTimeout(() => {
     location.href = "index.html";
   }, 2000);
+}
+
+document.getElementById("logoutBtn").addEventListener("click", logout);
+
+// ▼ オプション開閉（リンク版）
+document.getElementById("optionLink").addEventListener("click", () => {
+  const box = document.getElementById("optionBox");
+  box.style.display = (box.style.display === "none") ? "block" : "none";
+});
+
+// ▼ 自動ログアウト（リアルタイム残り秒数）
+document.getElementById("autoRun").addEventListener("click", () => {
+  let sec = Number(document.getElementById("autoSec").value);
+  if(!sec || sec <= 0){
+    alert("正しい秒数を入力してください");
+    return;
+  }
+
+  const status = document.getElementById("status");
+  status.textContent = `残り ${sec} 秒で自動ログアウトします…`;
+
+  const timer = setInterval(() => {
+    sec--;
+    if(sec > 0){
+      status.textContent = `残り ${sec} 秒で自動ログアウトします…`;
+    } else {
+      clearInterval(timer);
+      logout();
+    }
+  }, 1000);
 });
 </script>
 </body>
