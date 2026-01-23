@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>人間認証テスト＋パスワード認証</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .question { margin-bottom: 1em; }
+    input { width: 100%; padding: 6px; box-sizing: border-box; margin-top: 4px; }
+    #password-container { margin-top: 1.5em; }
+
+    #result {
+      font-weight: bold;
+      margin-top: 1em;
+      display: inline-block;
+    }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%,60%{transform:translateX(-8px)}
+      40%,80%{transform:translateX(8px)}
+    }
+
+    .failure {
+      color: #c0392b;
+      animation: shake 0.6s ease-in-out;
+    }
+
+    .success {
+      color: #27ae60;
+    }
+  </style>
+</head>
+<body>
+  <h1>人間認証テスト＋パスワード認証</h1>
+
+  <div id="questions"></div>
+
+  <button id="verify">認証</button>
+
+  <div id="password-container">
+    <label for="password">パスワードで認証する場合はこちら:</label>
+    <input type="password" id="password" placeholder="パスワードを入力" />
+  </div>
+
+  <p id="result"></p>
+
+  <script>
+  (async function() {
+    // ページ内でパスワードをハッシュ化し保存（変数にだけ保持）
+    const plain = 'abc_123';
+    const encoder = new TextEncoder();
+    const buf = await crypto.subtle.digest('SHA-256', encoder.encode(plain));
+    const passwordHash = Array.from(new Uint8Array(buf))
+      .map(b => b.toString(16).padStart(2,'0'))
+      .join('');
+    // plainは不要になったら "見えない" スコープ外へ
+    // -------------------------------------------------
+
+    // クイズ原本データ
+    const allQ = [
+      { formula: '\\displaystyle \\int_0^1 x^2 e^x \\,dx',              answer: 'e - 2' },
+      { formula: '\\displaystyle \\sum_{n=1}^{\\infty} \\frac{1}{n^2}', answer: '\\frac{\\pi^2}{6}' },
+      { formula: '\\displaystyle \\lim_{x\\to0} \\frac{\\sin x - x}{x^3}', answer: '-\\frac16' },
+      { formula: '\\displaystyle \\frac{d}{dx}\\bigl(x^x\\bigr)',         answer: 'x^x(\\ln x+1)' },
+      { formula: '\\displaystyle \\int \\frac{dx}{\\sqrt{1 - x^2}}',    answer: '\\arcsin x + C' },
+      { formula: '\\displaystyle \\det\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix}', answer: '-2' },
+      { formula: '\\displaystyle \\text{eigenvalues of }\\begin{pmatrix}2&1\\\\1&2\\end{pmatrix}', answer: '3,1' },
+      { formula: '\\displaystyle \\int_0^{2\\pi}\\cos^2 x\\,dx',        answer: '\\pi' },
+      { formula: '\\displaystyle \\nabla\\cdot(\\nabla\\phi)',         answer: '\\Delta \\phi' },
+      { formula: '\\displaystyle \\Gamma\\bigl(\\tfrac12\\bigr)',       answer: '\\sqrt{\\pi}' }
+    ];
+
+    let currentQ = [];
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+    }
+
+    function loadQuestions() {
+      shuffle(allQ);
+      currentQ = allQ.slice(0,5);
+      const container = document.getElementById('questions');
+      container.innerHTML = '';
+      currentQ.forEach((q,i) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.innerHTML = `
+          <div>Q${i+1}: \\(${q.formula}\\)</div>
+          <input type="text" id="ans${i}" placeholder="答えを入力" />
+        `;
+        container.appendChild(div);
+      });
+      MathJax.typesetPromise();
+      const r = document.getElementById('result');
+      r.textContent = '';
+      r.className = '';
+      document.getElementById('password').value = '';
+    }
+
+    document.getElementById('verify').addEventListener('click', async () => {
+      const resultEl = document.getElementById('result');
+      let humanOK = true;
+      // 1) クイズ全問正答チェック
+      currentQ.forEach((q,i) => {
+        const u = document.getElementById(`ans${i}`).value.trim();
+        if (u !== q.answer) humanOK = false;
+      });
+
+      // 2) パスワードチェック（入力があれば）
+      const pwInput = document.getElementById('password').value;
+      if (pwInput) {
+        const pwBuf = await crypto.subtle.digest('SHA-256', encoder.encode(pwInput));
+        const pwHash = Array.from(new Uint8Array(pwBuf))
+          .map(b => b.toString(16).padStart(2,'0'))
+          .join('');
+        if (pwHash === passwordHash) humanOK = true;
+      }
+
+      if (humanOK) {
+        resultEl.textContent = '人間と認証できました';
+        resultEl.className = 'success';
+        window.open('saver:load>>>>set>>>step>>userreset', '_blank');
+      } else {
+        resultEl.textContent = '人間だと確認できませんでした';
+        resultEl.className = 'failure';
+        resultEl.addEventListener('animationend', loadQuestions, { once: true });
+      }
+    });
+
+    loadQuestions();
+  })();
+  </script>
+</body>
+</html>
