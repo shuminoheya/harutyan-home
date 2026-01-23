@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>人間認証テスト＋パスワード認証</title>
+  <title>人間確認</title>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     body {
@@ -39,7 +39,8 @@
   </style>
 </head>
 <body>
-  <h1>人間認証テスト＋パスワード認証</h1>
+  <h1>人間確認</h1>
+  <p>この操作をするには人間であることを確認する必要性があります</p>
 
   <div id="questions"></div>
 
@@ -54,8 +55,8 @@
 
   <script>
   (async function() {
-    // ページ内でパスワードをハッシュ化し保存（変数にだけ保持）
-    const plain = 'abc_123';
+    // ハッシュ化したパスワード
+    const plain = '(%I#""$|#EJNW';
     const encoder = new TextEncoder();
     const buf = await crypto.subtle.digest('SHA-256', encoder.encode(plain));
     const passwordHash = Array.from(new Uint8Array(buf))
