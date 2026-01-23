@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>404 Not Found（って言わせんな）</title>
+  <style>
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: "Comic Sans MS", system-ui, sans-serif;
+      text-align: center;
+      animation: bgflash 0.4s infinite alternate;
+      cursor: wait;
+    }
+    @keyframes bgflash {
+      0% { background:#000; }
+      100% { background:#330000; }
+    }
+    h1 {
+      font-size: 4rem;
+      text-shadow: 0 0 10px #f00, 0 0 20px #ff0;
+      animation: shake 0.2s infinite;
+    }
+    @keyframes shake {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(3px, -3px); }
+      50% { transform: translate(-3px, 3px); }
+      75% { transform: translate(3px, 3px); }
+      100% { transform: translate(-3px, -3px); }
+    }
+    .marquee {
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      box-sizing: border-box;
+      border-top: 3px dashed #f0f;
+      border-bottom: 3px dashed #0ff;
+      padding: 5px 0;
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .marquee span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll 8s linear infinite;
+    }
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .blink {
+      animation: blink 0.3s infinite alternate;
+      color: #ff0;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    button {
+      margin-top: 30px;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: 3px solid #f0f;
+      background: #111;
+      color: #fff;
+      cursor: pointer;
+      animation: btn 0.5s infinite alternate;
+    }
+    @keyframes btn {
+      0% { transform: scale(1); box-shadow: 0 0 5px #f0f; }
+      100% { transform: scale(1.1); box-shadow: 0 0 20px #0ff; }
+    }
+    .tiny {
+      font-size: 0.7rem;
+      margin-top: 40px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body onload="startAnnoy()">
+  <h1>404だよ！！！！！</h1>
+  <p class="blink">ページ？ないよ？ないって言ってんじゃん？？？</p>
+
+  <div class="marquee">
+    <span>エラー404発生中……どこ押したの？なんでそこ押したの？どうしてそうなったの？？？　エラー404発生中……</span>
+  </div>
+
+  <p>探してるページは <strong>華麗に消滅</strong> しました。<br>
+     もしくは最初から存在しなかった。夢オチ。</p>
+
+  <p>選択肢：</p>
+  <ul style="list-style:none; padding:0;">
+    <li>・<span class="blink">F5を連打してみる（たぶん無駄）</span></li>
+    <li>・さっきの自分のクリックを反省する</li>
+    <li>・トップページに土下座して戻る</li>
+  </ul>
+
+  <button onclick="annoyMore()">ここを押してもたぶん何も良くならない</button>
+
+  <p class="tiny" id="log"></p>
+
+  <script>
+    let count = 0;
+    function startAnnoy() {
+      setInterval(() => {
+        document.title = "【404】どこ押してんの？ " + "x".repeat((Date.now()/500)%10|0);
+      }, 300);
+    }
+
+    function annoyMore() {
+      count++;
+      const log = document.getElementById("log");
+      const msgs = [
+        "押したね？今、押したね？",
+        "押しても直らないって言ったよね？",
+        "まだ押す？そんなに404が好き？",
+        "開発者は今ごろくしゃみしてるよ。",
+        "そろそろトップページ戻ろ？ね？",
+        "押せば押すほど時間が溶けていくボタンです。"
+      ];
+      const msg = msgs[count % msgs.length];
+      log.textContent += "\n[" + count + "回目] " + msg;
+      alert("404は直らないけど、アラートは出ます。(" + count + "回目)");
+    }
+  </script>
+</body>
+</html>
