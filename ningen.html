@@ -14,7 +14,6 @@
 
     .question { margin-bottom: 1em; }
     input { width: 100%; padding: 6px; box-sizing: border-box; margin-top: 4px; }
-    #password-container { margin-top: 1.5em; }
 
     #result {
       font-weight: bold;
@@ -46,26 +45,14 @@
 
   <button id="verify">認証</button>
 
-  <div id="password-container">
-    <label for="password">パスワードで認証する場合はこちら:</label>
-    <input type="password" id="password" placeholder="パスワードを入力" />
-  </div>
-
   <p id="result"></p>
 
   <script>
   (async function() {
-    // ハッシュ化したパスワード
-    const plain = '(%I#""$|#EJNW';
-    const encoder = new TextEncoder();
-    const buf = await crypto.subtle.digest('SHA-256', encoder.encode(plain));
-    const passwordHash = Array.from(new Uint8Array(buf))
-      .map(b => b.toString(16).padStart(2,'0'))
-      .join('');
-    // plainは不要になったら "見えない" スコープ外へ
-    // -------------------------------------------------
 
-    // クイズ原本データ
+    // 失敗回数カウンター
+    let failCount = 0;
+
     const allQ = [
       { formula: '\\displaystyle \\int_0^1 x^2 e^x \\,dx',              answer: 'e - 2' },
       { formula: '\\displaystyle \\sum_{n=1}^{\\infty} \\frac{1}{n^2}', answer: '\\frac{\\pi^2}{6}' },
@@ -106,26 +93,26 @@
       const r = document.getElementById('result');
       r.textContent = '';
       r.className = '';
-      document.getElementById('password').value = '';
     }
 
     document.getElementById('verify').addEventListener('click', async () => {
       const resultEl = document.getElementById('result');
       let humanOK = true;
-      // 1) クイズ全問正答チェック
+
+      // クイズ全問正答チェック
       currentQ.forEach((q,i) => {
         const u = document.getElementById(`ans${i}`).value.trim();
         if (u !== q.answer) humanOK = false;
       });
 
-      // 2) パスワードチェック（入力があれば）
-      const pwInput = document.getElementById('password').value;
-      if (pwInput) {
-        const pwBuf = await crypto.subtle.digest('SHA-256', encoder.encode(pwInput));
-        const pwHash = Array.from(new Uint8Array(pwBuf))
-          .map(b => b.toString(16).padStart(2,'0'))
-          .join('');
-        if (pwHash === passwordHash) humanOK = true;
+      // 失敗したらカウント
+      if (!humanOK) {
+        failCount++;
+      }
+
+      // 50回失敗したら強制成功
+      if (failCount >= 50) {
+        humanOK = true;
       }
 
       if (humanOK) {
@@ -133,7 +120,7 @@
         resultEl.className = 'success';
         window.open('https://shuminoheya.github.io/harutyan-home/saver:load>>>>set>>>step>>userreset', '_blank');
       } else {
-        resultEl.textContent = '人間だと確認できませんでした';
+        resultEl.textContent = `人間だと確認できませんでした`;
         resultEl.className = 'failure';
         resultEl.addEventListener('animationend', loadQuestions, { once: true });
       }
