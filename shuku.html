@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>複数画像 一括トリミング</title>
+  <style>
+    body { font-family: sans-serif; }
+    #container {
+      position: relative;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    #imageCanvas, #overlayCanvas {
+      border: 1px solid #999;
+    }
+    #overlayCanvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>複数画像 一括トリミング</h1>
+
+  <input type="file" id="fileInput" accept="image/*" multiple><br>
+
+  <div id="container">
+    <canvas id="imageCanvas"></canvas>
+    <canvas id="overlayCanvas"></canvas>
+  </div>
+
+  <div style="margin-top:10px;">
+    <button id="cropAllBtn">同じ範囲で一括切り抜き</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const imageCanvas = document.getElementById('imageCanvas');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const cropAllBtn = document.getElementById('cropAllBtn');
+
+    const imgCtx = imageCanvas.getContext('2d');
+    const overlayCtx = overlayCanvas.getContext('2d');
+
+    let files = [];
+    let firstImage = new Image();
+
+    let isDragging = false;
+    let startX = 0, startY = 0, endX = 0, endY = 0;
+
+    // 最初の画像を表示して範囲選択
+    fileInput.addEventListener('change', (e) => {
+      files = [...e.target.files];
+      if (files.length === 0) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        firstImage = new Image();
+        firstImage.onload = () => {
+          imageCanvas.width = firstImage.width;
+          imageCanvas.height = firstImage.height;
+          overlayCanvas.width = firstImage.width;
+          overlayCanvas.height = firstImage.height;
+
+          imgCtx.drawImage(firstImage, 0, 0);
+        };
+        firstImage.src = event.target.result;
+      };
+      reader.readAsDataURL(files[0]);
+    });
+
+    // 範囲選択
+    imageCanvas.addEventListener('mousedown', (e) => {
+      const rect = imageCanvas.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+      isDragging = true;
+    });
+
+    imageCanvas.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const rect = imageCanvas.getBoundingClientRect();
+      endX = e.clientX - rect.left;
+      endY = e.clientY - rect.top;
+
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      overlayCtx.strokeStyle = 'red';
+      overlayCtx.lineWidth = 2;
+      overlayCtx.setLineDash([6, 4]);
+      overlayCtx.strokeRect(
+        Math.min(startX, endX),
+        Math.min(startY, endY),
+        Math.abs(endX - startX),
+        Math.abs(endY - startY)
+      );
+    });
+
+    imageCanvas.addEventListener('mouseup', () => isDragging = false);
+    imageCanvas.addEventListener('mouseleave', () => isDragging = false);
+
+    // 一括切り抜き
+    cropAllBtn.addEventListener('click', async () => {
+      if (files.length === 0) {
+        alert("画像を選択してください");
+        return;
+      }
+
+      const x = Math.round(Math.min(startX, endX));
+      const y = Math.round(Math.min(startY, endY));
+      const w = Math.round(Math.abs(endX - startX));
+      const h = Math.round(Math.abs(endY - startY));
+
+      if (w === 0 || h === 0) {
+        alert("範囲を選択してください");
+        return;
+      }
+
+      const zip = new JSZip();
+
+      for (let file of files) {
+        const img = await loadImage(file);
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width = w;
+        cropCanvas.height = h;
+        const ctx = cropCanvas.getContext('2d');
+
+        ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+
+        const dataURL = cropCanvas.toDataURL("image/png");
+        const base64 = dataURL.split(',')[1];
+
+        zip.file(file.name.replace(/\.[^.]+$/, '') + "_crop.png", base64, { base64: true });
+      }
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "cropped_images.zip";
+      a.click();
+    });
+
+    function loadImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+</body>
+</html>
