@@ -1,44 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>東方に必要なDOSの知識</title>
-  <style>
-    body { font-family: sans-serif; line-height: 1.6; }
-    code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
-    pre { background: #f4f4f4; padding: 8px; border-radius: 4px; }
-  </style>
+<meta charset="UTF-8">
+<title>認証付きHTMLビューア</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <h1>東方に必要なDOSの知識</h1>
-
-  <h2>基本コマンド</h2>
-
-  <h3>フォルダ生成</h3>
-  <p>フォルダを作成するコマンド：</p>
-  <pre><code>mkdir フォルダ名</code></pre>
-
-  <h3>ファイルの削除</h3>
-  <p>ファイルを削除するコマンド：</p>
-  <pre><code>del ファイルのパス</code></pre>
-
-  <h3>コピー</h3>
-  <p>ファイルをコピーするコマンド：</p>
-  <pre><code>copy コピー元 コピー先</code></pre>
-
-  <h3>フォルダ構造確認</h3>
-  <p>フォルダ内のファイルやフォルダを一覧表示するコマンド：</p>
-  <pre><code>dir</code></pre>
-
-  <h2>gameの展開ファイル名</h2>
-  <ul>
-    <li>GEN.exe</li>
-    <li>KAI.exe</li>
-    <li>GEN.exe</li>
-  </ul>
-
-  <h2>注意</h2>
-  <p>封魔録は展開の必要はないっぽい。</p>
-  <p>ある程度知識がないと使えんよ。</p>
+<script>
+function getLoginCache(){
+  const raw = localStorage.getItem("harutyan-login");
+  if(!raw) return null;
+  try{
+    const data = JSON.parse(raw);
+    if(Date.now() > data.expiresAt){
+      localStorage.removeItem("harutyan-login");
+      return null;
+    }
+    return data.email;
+  }catch{return null;}
+}
+function b64ToText(b64){
+  return decodeURIComponent(escape(atob(b64)));
+}
+const EMBED_B64 = "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImphIj4KPGhlYWQ+CiAgPG1ldGEgY2hhcnNldD0iVVRGLTgiPgogIDx0aXRsZT7mnbHmlrnjgavlv4XopoHjgapET1Pjga7nn6XorZg8L3RpdGxlPgogIDxzdHlsZT4KICAgIGJvZHkgeyBmb250LWZhbWlseTogc2Fucy1zZXJpZjsgbGluZS1oZWlnaHQ6IDEuNjsgfQogICAgY29kZSB7IGJhY2tncm91bmQ6ICNmNGY0ZjQ7IHBhZGRpbmc6IDJweCA0cHg7IGJvcmRlci1yYWRpdXM6IDNweDsgfQogICAgcHJlIHsgYmFja2dyb3VuZDogI2Y0ZjRmNDsgcGFkZGluZzogOHB4OyBib3JkZXItcmFkaXVzOiA0cHg7IH0KICA8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5PgogIDxoMT7mnbHmlrnjgavlv4XopoHjgapET1Pjga7nn6XorZg8L2gxPgoKICA8aDI+5Z+65pys44Kz44Oe44Oz44OJPC9oMj4KCiAgPGgzPuODleOCqeODq+ODgOeUn+aIkDwvaDM+CiAgPHA+44OV44Kp44Or44OA44KS5L2c5oiQ44GZ44KL44Kz44Oe44Oz44OJ77yaPC9wPgogIDxwcmU+PGNvZGU+bWtkaXIg44OV44Kp44Or44OA5ZCNPC9jb2RlPjwvcHJlPgoKICA8aDM+44OV44Kh44Kk44Or44Gu5YmK6ZmkPC9oMz4KICA8cD7jg5XjgqHjgqTjg6vjgpLliYrpmaTjgZnjgovjgrPjg57jg7Pjg4nvvJo8L3A+CiAgPHByZT48Y29kZT5kZWwg44OV44Kh44Kk44Or44Gu44OR44K5PC9jb2RlPjwvcHJlPgoKICA8aDM+44Kz44OU44O8PC9oMz4KICA8cD7jg5XjgqHjgqTjg6vjgpLjgrPjg5Tjg7zjgZnjgovjgrPjg57jg7Pjg4nvvJo8L3A+CiAgPHByZT48Y29kZT5jb3B5IOOCs+ODlOODvOWFgyDjgrPjg5Tjg7zlhYg8L2NvZGU+PC9wcmU+CgogIDxoMz7jg5Xjgqnjg6vjg4Dmp4vpgKDnorroqo08L2gzPgogIDxwPuODleOCqeODq+ODgOWGheOBruODleOCoeOCpOODq+OChOODleOCqeODq+ODgOOCkuS4gOimp+ihqOekuuOBmeOCi+OCs+ODnuODs+ODie+8mjwvcD4KICA8cHJlPjxjb2RlPmRpcjwvY29kZT48L3ByZT4KCiAgPGgyPmdhbWXjga7lsZXplovjg5XjgqHjgqTjg6vlkI08L2gyPgogIDx1bD4KICAgIDxsaT5HRU4uZXhlPC9saT4KICAgIDxsaT5LQUkuZXhlPC9saT4KICAgIDxsaT5HRU4uZXhlPC9saT4KICA8L3VsPgoKICA8aDI+5rOo5oSPPC9oMj4KICA8cD7lsIHprZTpjLLjga/lsZXplovjga7lv4XopoHjga/jgarjgYTjgaPjgb3jgYTjgII8L3A+CiAgPHA+44GC44KL56iL5bqm55+l6K2Y44GM44Gq44GE44Go5L2/44GI44KT44KI44CCPC9wPgo8L2JvZHk+CjwvaHRtbD4K";
+(function init(){
+  const cached = getLoginCache();
+  if(cached){
+    // ログイン済みなら埋め込みHTMLを復号して表示
+    const html = b64ToText(EMBED_B64);
+    document.open();
+    document.write(html);
+    document.close();
+  }else{
+    // 未ログインなら login.html にリダイレクト
+    location.href = "login.html";
+  }
+})();
+</script>
 </body>
 </html>
