@@ -1,183 +1,41 @@
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=0.56, maximum-scale=0.56, user-scalable=no" />
-	<meta name="HandheldFriendly" content="true" />
-    <title>Touhou 1: Touhou Reiiden by ZUNSOFT/Touhou Project</title>
-	<style>
-		#controls {
-		display: block;
-		position: fixed;
-		right:0px;
-		float: right;
-		vertical-align: top;
-		margin-top: 30px;
-		margin-right: 20px;
-      }
-
-      table
-	  {
-		border: none;
-	  }
-	  td.button_td
-	  {
-		width: 9%; 
-		height: 5%;
-	  }
-	  td.button_td1
-	  {
-		width: 6%; 
-		height: 5%;
-	  }
-	  td.button_td2
-	  {
-		width: 10%; 
-		height: 5%;
-	  }
-	  input.inputbutton1
-	  {
-		width: 120%;
-		height: 100%;
-		font-size: 36pt;
-		padding: 3pt 0;
-	  }
-	  input.inputbutton2
-	  {
-		width: 85%; 
-		height: 85%;
-		font-size: 24pt;
-	  }
-	  input.inputbutton3
-	  {
-		width: 85%; 
-		height: 85%;
-		font-size: 24pt;
-	  }
-	  div.softkbd
-	  {
-		width: 90%;
-		position: fixed;
-		bottom: 0pt;
-		left: 5%;
-		opacity: 0.5;
-	  }
-	  
-	  div.emumain
-	  {
-		display: block;
-		width: 100%;
-		position: fixed;
-		left: 0%;
-		top: 40pt;
-	  }
-	</style>
-  </head>
-  <body>
-
-	<div id='controls'>
-		<span><input type="button" value="Fullscreen" onclick="Module.requestFullscreen(true, false)">	
-		</span>
-	</div>
-	
-	<div class="emumain">
-
-    <canvas id="canvas" style="width: 100%; display: block; margin: 0 auto;" />
-	</div>
-
-	<div id="softkbd" class="softkbd">
-	<table style="margin: auto;">
-	<tr>
-	<td class='button_td'></td>
-	<td class='button_td'><input class='inputbutton1' type="button" value="^" onpointerdown='kd(this, 38);' onpointerup='ku(this, 38);' ></td>
-	<td class="button_td"></td>
-	<td class="button_td1"></td>
-	<td class="button_td2"><input class='inputbutton3' type="button" value="Esc" onpointerdown='kd(this, 27);' onpointerup='ku(this, 27);'></td>
-	<td class="button_td2"><input class='inputbutton3' type="button" value="Shift" onpointerdown='kd(this, 16);' onpointerup='ku(this, 16);'></td>
-	
-	</tr>
-	<tr>
-	<td><input class='inputbutton1' type="button" value="<" onpointerdown='kd(this, 37);' onpointerup='ku(this, 37);'></td>
-	<td></td>
-	<td><input class='inputbutton1' type="button" value=">" onpointerdown='kd(this, 39);' onpointerup='ku(this, 39);'></td>
-	<td></td>
-	<td class="button_td2"><input class='inputbutton3' type="button" value="Space" onpointerdown='kd(this, 32);' onpointerup='ku(this, 32);'></td>
-	<td class="button_td2"><input class='inputbutton3' type="button" value="Return" onpointerdown='kd(this, 13);' onpointerup='ku(this, 13);' ></td>
-	</tr>
-	<tr>
-	</tr>
-	<tr>
-	<td></td>
-	<td><input class='inputbutton1' type="button" value="v" onpointerdown='kd(this, 40);' onpointerup='ku(this, 40);'></td>
-	<td></td>
-	<td></td>
-	<td class="button_td"><input class='inputbutton2' type="button" value="X" onpointerdown='kd(this, 88);' onpointerup='ku(this, 88);' ></td>
-	<td class="button_td"><input class='inputbutton2' type="button" value="Z" onpointerdown='kd(this, 90);' onpointerup='ku(this, 90);'></td>
-	</tr>
-	</table>
-	<div style="height: 30pt;" />
-	</div>
-
-    <script type="text/javascript" src="es6-promise.js"></script>
-    <script type="text/javascript" src="browserfs.min.js"></script>
-    <script type="text/javascript" src="loader.js"></script>
-    <script type="text/javascript">
-      var emulator = new Emulator(document.querySelector("#canvas"),
-        null,
-        new PC98DosBoxLoader(PC98DosBoxLoader.emulatorJS("dosbox-x-sdl1.js"),
-          PC98DosBoxLoader.emulatorWASM("dosbox-x-sdl1.wasm"),
-          PC98DosBoxLoader.locateAdditionalEmulatorJS(locateAdditionalFiles),
-		  PC98DosBoxLoader.aspectRatio(1.33),
-
-          PC98DosBoxLoader.mountZip("c",
-            PC98DosBoxLoader.fetchFile("Game File",
-              "FSB.zip")),
-          PC98DosBoxLoader.mountZip("pc98bios",
-            PC98DosBoxLoader.fetchFile("PC-98 font/FM BIOS File",
-              "pc98bios.zip")),
-
-          PC98DosBoxLoader.startExe("game.com")))
-      emulator.start({ waitAfterDownloading: true });
-
-      function locateAdditionalFiles(filename) {
-        if (filename === "dosbox.html.mem") {
-          return "emulators/em-dosbox/dosbox-sync.mem";
-        }
-        return "emulators/dosbox-x/"+ filename;
-      }
-	  
-	    var oldBkColor = null ;
-	  	function kd(e, keyCode)
-		{	
-			if (oldBkColor == null)
-				oldBkColor = e.style.background;
-			e.style.background="red";
-			__triggerEvent(document.getElementById("canvas"), "keydown", keyCode);
-		}
-		function ku(e, keyCode)
-		{
-			e.style.background=oldBkColor;
-			__triggerEvent(document.getElementById("canvas"), "keyup", keyCode);
-		}
-		
-		function __triggerEvent(el, evname, keyCode)
-		{
-			var eventObj = document.createEventObject ?
-				document.createEventObject() : document.createEvent("Events");
-		  
-			if(eventObj.initEvent){
-			  eventObj.initEvent(evname, true, true);
-			}
-		  
-			eventObj.keyCode = keyCode;
-			eventObj.which = keyCode;
-			
-			el.dispatchEvent ? el.dispatchEvent(eventObj) : el.fireEvent("onkeydown", eventObj); 
-		} 
-
-		document.getElementById('softkbd').addEventListener("touchstart", function(e){
-			e.preventDefault();
-		},{passive: false});
-		
-    </script>
-  </body>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>認証付きHTMLビューア</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<script>
+function getLoginCache(){
+  const raw = localStorage.getItem("harutyan-login");
+  if(!raw) return null;
+  try{
+    const data = JSON.parse(raw);
+    if(Date.now() > data.expiresAt){
+      localStorage.removeItem("harutyan-login");
+      return null;
+    }
+    return data.email;
+  }catch{return null;}
+}
+function b64ToText(b64){
+  return decodeURIComponent(escape(atob(b64)));
+}
+const EMBED_B64 = "PGh0bWw+DQogIDxoZWFkPg0KICAgIDxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04Ij4NCgk8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTAuNTYsIG1heGltdW0tc2NhbGU9MC41NiwgdXNlci1zY2FsYWJsZT1ubyIgLz4NCgk8bWV0YSBuYW1lPSJIYW5kaGVsZEZyaWVuZGx5IiBjb250ZW50PSJ0cnVlIiAvPg0KICAgIDx0aXRsZT5Ub3Vob3UgMTogVG91aG91IFJlaWlkZW4gYnkgWlVOU09GVC9Ub3Vob3UgUHJvamVjdDwvdGl0bGU+DQoJPHN0eWxlPg0KCQkjY29udHJvbHMgew0KCQlkaXNwbGF5OiBibG9jazsNCgkJcG9zaXRpb246IGZpeGVkOw0KCQlyaWdodDowcHg7DQoJCWZsb2F0OiByaWdodDsNCgkJdmVydGljYWwtYWxpZ246IHRvcDsNCgkJbWFyZ2luLXRvcDogMzBweDsNCgkJbWFyZ2luLXJpZ2h0OiAyMHB4Ow0KICAgICAgfQ0KDQogICAgICB0YWJsZQ0KCSAgew0KCQlib3JkZXI6IG5vbmU7DQoJICB9DQoJICB0ZC5idXR0b25fdGQNCgkgIHsNCgkJd2lkdGg6IDklOyANCgkJaGVpZ2h0OiA1JTsNCgkgIH0NCgkgIHRkLmJ1dHRvbl90ZDENCgkgIHsNCgkJd2lkdGg6IDYlOyANCgkJaGVpZ2h0OiA1JTsNCgkgIH0NCgkgIHRkLmJ1dHRvbl90ZDINCgkgIHsNCgkJd2lkdGg6IDEwJTsgDQoJCWhlaWdodDogNSU7DQoJICB9DQoJICBpbnB1dC5pbnB1dGJ1dHRvbjENCgkgIHsNCgkJd2lkdGg6IDEyMCU7DQoJCWhlaWdodDogMTAwJTsNCgkJZm9udC1zaXplOiAzNnB0Ow0KCQlwYWRkaW5nOiAzcHQgMDsNCgkgIH0NCgkgIGlucHV0LmlucHV0YnV0dG9uMg0KCSAgew0KCQl3aWR0aDogODUlOyANCgkJaGVpZ2h0OiA4NSU7DQoJCWZvbnQtc2l6ZTogMjRwdDsNCgkgIH0NCgkgIGlucHV0LmlucHV0YnV0dG9uMw0KCSAgew0KCQl3aWR0aDogODUlOyANCgkJaGVpZ2h0OiA4NSU7DQoJCWZvbnQtc2l6ZTogMjRwdDsNCgkgIH0NCgkgIGRpdi5zb2Z0a2JkDQoJICB7DQoJCXdpZHRoOiA5MCU7DQoJCXBvc2l0aW9uOiBmaXhlZDsNCgkJYm90dG9tOiAwcHQ7DQoJCWxlZnQ6IDUlOw0KCQlvcGFjaXR5OiAwLjU7DQoJICB9DQoJICANCgkgIGRpdi5lbXVtYWluDQoJICB7DQoJCWRpc3BsYXk6IGJsb2NrOw0KCQl3aWR0aDogMTAwJTsNCgkJcG9zaXRpb246IGZpeGVkOw0KCQlsZWZ0OiAwJTsNCgkJdG9wOiA0MHB0Ow0KCSAgfQ0KCTwvc3R5bGU+DQogIDwvaGVhZD4NCiAgPGJvZHk+DQoNCgk8ZGl2IGlkPSdjb250cm9scyc+DQoJCTxzcGFuPjxpbnB1dCB0eXBlPSJidXR0b24iIHZhbHVlPSJGdWxsc2NyZWVuIiBvbmNsaWNrPSJNb2R1bGUucmVxdWVzdEZ1bGxzY3JlZW4odHJ1ZSwgZmFsc2UpIj4JDQoJCTwvc3Bhbj4NCgk8L2Rpdj4NCgkNCgk8ZGl2IGNsYXNzPSJlbXVtYWluIj4NCg0KICAgIDxjYW52YXMgaWQ9ImNhbnZhcyIgc3R5bGU9IndpZHRoOiAxMDAlOyBkaXNwbGF5OiBibG9jazsgbWFyZ2luOiAwIGF1dG87IiAvPg0KCTwvZGl2Pg0KDQoJPGRpdiBpZD0ic29mdGtiZCIgY2xhc3M9InNvZnRrYmQiPg0KCTx0YWJsZSBzdHlsZT0ibWFyZ2luOiBhdXRvOyI+DQoJPHRyPg0KCTx0ZCBjbGFzcz0nYnV0dG9uX3RkJz48L3RkPg0KCTx0ZCBjbGFzcz0nYnV0dG9uX3RkJz48aW5wdXQgY2xhc3M9J2lucHV0YnV0dG9uMScgdHlwZT0iYnV0dG9uIiB2YWx1ZT0iXiIgb25wb2ludGVyZG93bj0na2QodGhpcywgMzgpOycgb25wb2ludGVydXA9J2t1KHRoaXMsIDM4KTsnID48L3RkPg0KCTx0ZCBjbGFzcz0iYnV0dG9uX3RkIj48L3RkPg0KCTx0ZCBjbGFzcz0iYnV0dG9uX3RkMSI+PC90ZD4NCgk8dGQgY2xhc3M9ImJ1dHRvbl90ZDIiPjxpbnB1dCBjbGFzcz0naW5wdXRidXR0b24zJyB0eXBlPSJidXR0b24iIHZhbHVlPSJFc2MiIG9ucG9pbnRlcmRvd249J2tkKHRoaXMsIDI3KTsnIG9ucG9pbnRlcnVwPSdrdSh0aGlzLCAyNyk7Jz48L3RkPg0KCTx0ZCBjbGFzcz0iYnV0dG9uX3RkMiI+PGlucHV0IGNsYXNzPSdpbnB1dGJ1dHRvbjMnIHR5cGU9ImJ1dHRvbiIgdmFsdWU9IlNoaWZ0IiBvbnBvaW50ZXJkb3duPSdrZCh0aGlzLCAxNik7JyBvbnBvaW50ZXJ1cD0na3UodGhpcywgMTYpOyc+PC90ZD4NCgkNCgk8L3RyPg0KCTx0cj4NCgk8dGQ+PGlucHV0IGNsYXNzPSdpbnB1dGJ1dHRvbjEnIHR5cGU9ImJ1dHRvbiIgdmFsdWU9IjwiIG9ucG9pbnRlcmRvd249J2tkKHRoaXMsIDM3KTsnIG9ucG9pbnRlcnVwPSdrdSh0aGlzLCAzNyk7Jz48L3RkPg0KCTx0ZD48L3RkPg0KCTx0ZD48aW5wdXQgY2xhc3M9J2lucHV0YnV0dG9uMScgdHlwZT0iYnV0dG9uIiB2YWx1ZT0iPiIgb25wb2ludGVyZG93bj0na2QodGhpcywgMzkpOycgb25wb2ludGVydXA9J2t1KHRoaXMsIDM5KTsnPjwvdGQ+DQoJPHRkPjwvdGQ+DQoJPHRkIGNsYXNzPSJidXR0b25fdGQyIj48aW5wdXQgY2xhc3M9J2lucHV0YnV0dG9uMycgdHlwZT0iYnV0dG9uIiB2YWx1ZT0iU3BhY2UiIG9ucG9pbnRlcmRvd249J2tkKHRoaXMsIDMyKTsnIG9ucG9pbnRlcnVwPSdrdSh0aGlzLCAzMik7Jz48L3RkPg0KCTx0ZCBjbGFzcz0iYnV0dG9uX3RkMiI+PGlucHV0IGNsYXNzPSdpbnB1dGJ1dHRvbjMnIHR5cGU9ImJ1dHRvbiIgdmFsdWU9IlJldHVybiIgb25wb2ludGVyZG93bj0na2QodGhpcywgMTMpOycgb25wb2ludGVydXA9J2t1KHRoaXMsIDEzKTsnID48L3RkPg0KCTwvdHI+DQoJPHRyPg0KCTwvdHI+DQoJPHRyPg0KCTx0ZD48L3RkPg0KCTx0ZD48aW5wdXQgY2xhc3M9J2lucHV0YnV0dG9uMScgdHlwZT0iYnV0dG9uIiB2YWx1ZT0idiIgb25wb2ludGVyZG93bj0na2QodGhpcywgNDApOycgb25wb2ludGVydXA9J2t1KHRoaXMsIDQwKTsnPjwvdGQ+DQoJPHRkPjwvdGQ+DQoJPHRkPjwvdGQ+DQoJPHRkIGNsYXNzPSJidXR0b25fdGQiPjxpbnB1dCBjbGFzcz0naW5wdXRidXR0b24yJyB0eXBlPSJidXR0b24iIHZhbHVlPSJYIiBvbnBvaW50ZXJkb3duPSdrZCh0aGlzLCA4OCk7JyBvbnBvaW50ZXJ1cD0na3UodGhpcywgODgpOycgPjwvdGQ+DQoJPHRkIGNsYXNzPSJidXR0b25fdGQiPjxpbnB1dCBjbGFzcz0naW5wdXRidXR0b24yJyB0eXBlPSJidXR0b24iIHZhbHVlPSJaIiBvbnBvaW50ZXJkb3duPSdrZCh0aGlzLCA5MCk7JyBvbnBvaW50ZXJ1cD0na3UodGhpcywgOTApOyc+PC90ZD4NCgk8L3RyPg0KCTwvdGFibGU+DQoJPGRpdiBzdHlsZT0iaGVpZ2h0OiAzMHB0OyIgLz4NCgk8L2Rpdj4NCg0KICAgIDxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0IiBzcmM9ImVzNi1wcm9taXNlLmpzIj48L3NjcmlwdD4NCiAgICA8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJicm93c2VyZnMubWluLmpzIj48L3NjcmlwdD4NCiAgICA8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJsb2FkZXIuanMiPjwvc2NyaXB0Pg0KICAgIDxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0Ij4NCiAgICAgIHZhciBlbXVsYXRvciA9IG5ldyBFbXVsYXRvcihkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCIjY2FudmFzIiksDQogICAgICAgIG51bGwsDQogICAgICAgIG5ldyBQQzk4RG9zQm94TG9hZGVyKFBDOThEb3NCb3hMb2FkZXIuZW11bGF0b3JKUygiZG9zYm94LXgtc2RsMS5qcyIpLA0KICAgICAgICAgIFBDOThEb3NCb3hMb2FkZXIuZW11bGF0b3JXQVNNKCJkb3Nib3gteC1zZGwxLndhc20iKSwNCiAgICAgICAgICBQQzk4RG9zQm94TG9hZGVyLmxvY2F0ZUFkZGl0aW9uYWxFbXVsYXRvckpTKGxvY2F0ZUFkZGl0aW9uYWxGaWxlcyksDQoJCSAgUEM5OERvc0JveExvYWRlci5hc3BlY3RSYXRpbygxLjMzKSwNCg0KICAgICAgICAgIFBDOThEb3NCb3hMb2FkZXIubW91bnRaaXAoImMiLA0KICAgICAgICAgICAgUEM5OERvc0JveExvYWRlci5mZXRjaEZpbGUoIkdhbWUgRmlsZSIsDQogICAgICAgICAgICAgICJGU0IuemlwIikpLA0KICAgICAgICAgIFBDOThEb3NCb3hMb2FkZXIubW91bnRaaXAoInBjOThiaW9zIiwNCiAgICAgICAgICAgIFBDOThEb3NCb3hMb2FkZXIuZmV0Y2hGaWxlKCJQQy05OCBmb250L0ZNIEJJT1MgRmlsZSIsDQogICAgICAgICAgICAgICJwYzk4Ymlvcy56aXAiKSksDQoNCiAgICAgICAgICBQQzk4RG9zQm94TG9hZGVyLnN0YXJ0RXhlKCJnYW1lLmNvbSIpKSkNCiAgICAgIGVtdWxhdG9yLnN0YXJ0KHsgd2FpdEFmdGVyRG93bmxvYWRpbmc6IHRydWUgfSk7DQoNCiAgICAgIGZ1bmN0aW9uIGxvY2F0ZUFkZGl0aW9uYWxGaWxlcyhmaWxlbmFtZSkgew0KICAgICAgICBpZiAoZmlsZW5hbWUgPT09ICJkb3Nib3guaHRtbC5tZW0iKSB7DQogICAgICAgICAgcmV0dXJuICJlbXVsYXRvcnMvZW0tZG9zYm94L2Rvc2JveC1zeW5jLm1lbSI7DQogICAgICAgIH0NCiAgICAgICAgcmV0dXJuICJlbXVsYXRvcnMvZG9zYm94LXgvIisgZmlsZW5hbWU7DQogICAgICB9DQoJICANCgkgICAgdmFyIG9sZEJrQ29sb3IgPSBudWxsIDsNCgkgIAlmdW5jdGlvbiBrZChlLCBrZXlDb2RlKQ0KCQl7CQ0KCQkJaWYgKG9sZEJrQ29sb3IgPT0gbnVsbCkNCgkJCQlvbGRCa0NvbG9yID0gZS5zdHlsZS5iYWNrZ3JvdW5kOw0KCQkJZS5zdHlsZS5iYWNrZ3JvdW5kPSJyZWQiOw0KCQkJX190cmlnZ2VyRXZlbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImNhbnZhcyIpLCAia2V5ZG93biIsIGtleUNvZGUpOw0KCQl9DQoJCWZ1bmN0aW9uIGt1KGUsIGtleUNvZGUpDQoJCXsNCgkJCWUuc3R5bGUuYmFja2dyb3VuZD1vbGRCa0NvbG9yOw0KCQkJX190cmlnZ2VyRXZlbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImNhbnZhcyIpLCAia2V5dXAiLCBrZXlDb2RlKTsNCgkJfQ0KCQkNCgkJZnVuY3Rpb24gX190cmlnZ2VyRXZlbnQoZWwsIGV2bmFtZSwga2V5Q29kZSkNCgkJew0KCQkJdmFyIGV2ZW50T2JqID0gZG9jdW1lbnQuY3JlYXRlRXZlbnRPYmplY3QgPw0KCQkJCWRvY3VtZW50LmNyZWF0ZUV2ZW50T2JqZWN0KCkgOiBkb2N1bWVudC5jcmVhdGVFdmVudCgiRXZlbnRzIik7DQoJCSAgDQoJCQlpZihldmVudE9iai5pbml0RXZlbnQpew0KCQkJICBldmVudE9iai5pbml0RXZlbnQoZXZuYW1lLCB0cnVlLCB0cnVlKTsNCgkJCX0NCgkJICANCgkJCWV2ZW50T2JqLmtleUNvZGUgPSBrZXlDb2RlOw0KCQkJZXZlbnRPYmoud2hpY2ggPSBrZXlDb2RlOw0KCQkJDQoJCQllbC5kaXNwYXRjaEV2ZW50ID8gZWwuZGlzcGF0Y2hFdmVudChldmVudE9iaikgOiBlbC5maXJlRXZlbnQoIm9ua2V5ZG93biIsIGV2ZW50T2JqKTsgDQoJCX0gDQoNCgkJZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3NvZnRrYmQnKS5hZGRFdmVudExpc3RlbmVyKCJ0b3VjaHN0YXJ0IiwgZnVuY3Rpb24oZSl7DQoJCQllLnByZXZlbnREZWZhdWx0KCk7DQoJCX0se3Bhc3NpdmU6IGZhbHNlfSk7DQoJCQ0KICAgIDwvc2NyaXB0Pg0KICA8L2JvZHk+DQo8L2h0bWw+DQo=";
+(function init(){
+  const cached = getLoginCache();
+  if(cached){
+    // ログイン済みなら埋め込みHTMLを復号して表示
+    const html = b64ToText(EMBED_B64);
+    document.open();
+    document.write(html);
+    document.close();
+  }else{
+    // 未ログインなら login.html にリダイレクト
+    location.href = "login.html";
+  }
+})();
+</script>
+</body>
 </html>
