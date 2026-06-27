@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>認証付きHTMLビューア</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<script>
+function getLoginCache(){
+  const raw = localStorage.getItem("harutyan-login");
+  if(!raw) return null;
+  try{
+    const data = JSON.parse(raw);
+    if(Date.now() > data.expiresAt){
+      localStorage.removeItem("harutyan-login");
+      return null;
+    }
+    return data.email;
+  }catch{return null;}
+}
+function b64ToText(b64){
+  return decodeURIComponent(escape(atob(b64)));
+}
+const EMBED_B64 = "PHA+44Ki44Kv44K744K544GX44Gf44GE44K144Kk44OI44Gu44Oq44Oz44Kv44KSQ29weTwvcD4KPHA+VVJM44KS5YWl5Yqb44GX44Gm44Ki44Kv44K744K544KS5oq844GZPC9wPgo8cD5jaHJvbWXjga7orablkYrjgpLnhKHoppbjgZfjgabpgIHkv6E8L3A+CjxwPu+8kuenkuOBj+OCieOBhOeri+OBo+OBn+OCieODluODqeOCpuOCtuODkOODg+OCr++8iOW3puS4iuOBruKGkO+8iTwvcD4KPHA+44Oa44O844K444KS5YaN6Kqt44G/6L6844G/PC9wPgo8cD5VUkzjgpLjgoLjgYbkuIDlm57lhaXlips8L3A+CjxwPuOCouOCr+OCu+OCueWujOS6hjwvcD4KPHA+5rOo5oSP54K5PC9wPgo8cD7vvJLnp5LjgY/jgonjgYTjgafihpDjgpLmirzjgZXjgarjgYTjgajjgrXjgqbjg7Pjg4njg5Djg4Pjgq/jgqbjgqTjg6vjgrnjgYzlhaXjgovjgYvjgonmsJfjgpLjgaTjgZHjgojjgYYKPHA+NTAz44GM5Ye644KL44Go44GNPC9wPgo8cD7vvJPliIbjgZDjgonjgYTlvoXjgaPjgabjgYvjgonjgqLjgq/jgrvjgrk8L3A+CjxwPuOCqOODqeODvOOBjOWHuuOCizwvcD4KPHA+5aSa5YiGVVJM44KS44Of44K544Gj44Gm44GE44KLPC9wPgo8cD7kurrplpPnorroqo3jgYzmsLjpgaDjgavlh7rjgos8L3A+CjxwPuWun+mam2JvdOOBi+OCieOBruOCouOCr+OCu+OCueOBoOOBi+OCieOBguOBjeOCieOCgeOBpuOBrTwvcD4KPGEgY2xhc3M9ImJ0bi1saW5rIiBocmVmPSJ3ZWJwcm94eS5odG1sIiB0YXJnZXQ9Il9ibGFuayI+VVJM44KS5YWl5Yqb44GZ44KL44Go44GT44KNPC9hPg==";
+(function init(){
+  const cached = getLoginCache();
+  if(cached){
+    // ログイン済みなら埋め込みHTMLを復号して表示
+    const html = b64ToText(EMBED_B64);
+    document.open();
+    document.write(html);
+    document.close();
+  }else{
+    // 未ログインなら login.html にリダイレクト
+    location.href = "login.html";
+  }
+})();
+</script>
+</body>
+</html>
