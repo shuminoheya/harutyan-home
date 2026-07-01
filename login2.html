@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ログインフォーム（GitHub API 排他テスト）</title>
+<title>ログインフォーム（wan.json不要版）</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body { font-family: system-ui, sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
@@ -19,7 +19,7 @@ body { font-family: system-ui, sans-serif; background:#f3f4f6; display:flex; ali
 <h2>ログイン</h2>
 
 <form id="loginForm" novalidate autocomplete="off">
-<input type="email" id="email" placeholder="メールアドレス" required>
+<input type="text" id="email" placeholder="ユーザー名 (例: wan)" required>
 <input type="password" id="password" placeholder="パスワード" required>
 <button id="loginBtn" type="button">ログイン</button>
 </form>
@@ -28,45 +28,26 @@ body { font-family: system-ui, sans-serif; background:#f3f4f6; display:flex; ali
 </div>
 
 <script>
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-const VERIFICATION_SECRET = "LOGIN-OK";
+const TOKEN = "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";  // ★あなたの Token を入れる
+const REPO = "shuminoheya/harutyan-home";
 
-function b64ToBytes(b64){
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-async function deriveKey(email,password,saltBytes){
-  const material = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(email+":"+password),
-    {name:"PBKDF2"},
-    false,
-    ["deriveKey"]
-  );
-  return crypto.subtle.deriveKey(
-    {name:"PBKDF2",salt:saltBytes,iterations:120000,hash:"SHA-256"},
-    material,
-    {name:"AES-GCM",length:256},
-    false,
-    ["encrypt","decrypt"]
-  );
-}
+// ★ 固定ユーザーとパスワード（自由に変更可能）
+const USERS = {
+  "wan": "1234",
+  "kusunoki": "abcd",
+  "naoto": "pass",
+  "iwasakisyouta": "9999",
+  "katagiri": "0000"
+};
 
 /* ---------------------------
    GitHub API 排他ログイン
 ---------------------------- */
 
-const TOKEN = "11B2JCPRY0oj76dWXmkFfP_3uLU0pD5cYozl3MNirDEBUWEmoGs8PgfQ2V8HVxtJi8LAQOA6YJeal3QfjC";  
-const REPO = "shuminoheya/harutyan-home";
-
-async function isLocked(email){
+async function isLocked(user){
   const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/lock.json`);
   const data = await res.json();
-  return data[email] === true;
+  return data[user] === true;
 }
 
 async function getLockSha(){
@@ -78,10 +59,10 @@ async function getLockSha(){
   return meta.sha;
 }
 
-async function lockUser(email){
+async function lockUser(user){
   const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/lock.json`);
   const data = await res.json();
-  data[email] = true;
+  data[user] = true;
 
   const sha = await getLockSha();
 
@@ -94,7 +75,7 @@ async function lockUser(email){
         "Content-Type":"application/json"
       },
       body:JSON.stringify({
-        message:`lock ${email}`,
+        message:`lock ${user}`,
         content:btoa(JSON.stringify(data,null,2)),
         sha
       })
@@ -102,10 +83,10 @@ async function lockUser(email){
   );
 }
 
-async function unlockUser(email){
+async function unlockUser(user){
   const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/lock.json`);
   const data = await res.json();
-  data[email] = false;
+  data[user] = false;
 
   const sha = await getLockSha();
 
@@ -118,7 +99,7 @@ async function unlockUser(email){
         "Content-Type":"application/json"
       },
       body:JSON.stringify({
-        message:`unlock ${email}`,
+        message:`unlock ${user}`,
         content:btoa(JSON.stringify(data,null,2)),
         sha
       })
@@ -127,46 +108,7 @@ async function unlockUser(email){
 }
 
 /* ---------------------------
-   ユーザー暗号データ取得
----------------------------- */
-
-async function getUserRecord(email){
-  const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/users/${email}.json`);
-  if(res.status !== 200) return null;
-  return await res.json();
-}
-
-async function tryLogin(emailInput,passwordInput){
-  const record = await getUserRecord(emailInput);
-  if(!record){
-    showMessage("該当メールが登録されていません","red");
-    return false;
-  }
-
-  const salt = b64ToBytes(record.salt_b64);
-  const iv   = b64ToBytes(record.iv_b64);
-  const ct   = b64ToBytes(record.ct_b64);
-
-  try{
-    const key = await deriveKey(emailInput,passwordInput,salt);
-    const ptBytes = new Uint8Array(
-      await crypto.subtle.decrypt({name:"AES-GCM",iv},key,ct)
-    );
-    const text = dec.decode(ptBytes);
-    return text === VERIFICATION_SECRET;
-  }catch{
-    return false;
-  }
-}
-
-function showMessage(text,color="#222"){
-  const msg = document.getElementById("message");
-  msg.style.color = color;
-  msg.textContent = text;
-}
-
-/* ---------------------------
-   ログインボタン処理
+   ログイン処理（wan.json不要版）
 ---------------------------- */
 
 document.getElementById("loginBtn").addEventListener("click", async () => {
@@ -174,7 +116,19 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   const password = document.getElementById("password").value;
 
   if(!email || !password){
-    showMessage("メールとパスワードを入力してください","red");
+    showMessage("ユーザー名とパスワードを入力してください","red");
+    return;
+  }
+
+  // ★ ユーザー存在チェック
+  if(!(email in USERS)){
+    showMessage("ユーザーが存在しません","red");
+    return;
+  }
+
+  // ★ パスワード照合
+  if(USERS[email] !== password){
+    showMessage("パスワードが違います","red");
     return;
   }
 
@@ -184,16 +138,19 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     return;
   }
 
-  showMessage("認証中…","#666");
+  showMessage("ログイン中…","#666");
 
-  const ok = await tryLogin(email,password);
-  if(ok){
-    await lockUser(email);  // ★ ロックする
-    showMessage("ログイン成功: " + email,"green");
-  }else{
-    showMessage("メールアドレスまたはパスワードが違います","red");
-  }
+  // ★ ロックする
+  await lockUser(email);
+
+  showMessage("ログイン成功: " + email,"green");
 });
+
+function showMessage(text,color="#222"){
+  const msg = document.getElementById("message");
+  msg.style.color = color;
+  msg.textContent = text;
+}
 </script>
 </body>
 </html>
