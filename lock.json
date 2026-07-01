@@ -1,5 +1,5 @@
 {
-  "wan": false,
+  "wan": true,
   "kusunoki": false,
   "naoto": false,
   "iwasakisyouta": false,
